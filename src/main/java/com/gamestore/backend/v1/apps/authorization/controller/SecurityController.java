@@ -1,6 +1,6 @@
 package com.gamestore.backend.v1.apps.authorization.controller;
 
-import com.gamestore.backend.v1.apps.authorization.config.JWTCore;
+import com.gamestore.backend.v1.apps.authorization.security.JWTCore;
 import com.gamestore.backend.v1.apps.authorization.model.SingInRequest;
 import com.gamestore.backend.v1.apps.authorization.model.SingUpRequest;
 import com.gamestore.backend.v1.apps.authorization.model.Users;

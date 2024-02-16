@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Principal;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 @Service
@@ -28,6 +29,8 @@ public class UserService {
             return null;
         }
     }
-
+    public String getUser(UUID uid){
+        return repository.findByUid(uid).getUsername();
+    }
 
 }

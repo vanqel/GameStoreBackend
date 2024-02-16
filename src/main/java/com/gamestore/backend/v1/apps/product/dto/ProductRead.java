@@ -1,12 +1,22 @@
 package com.gamestore.backend.v1.apps.product.dto;
 
-import com.gamestore.backend.v1.apps.product.model.Product;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.UUID;
 
 @Data
-@Builder
+@AllArgsConstructor
+@Setter
+@Getter
 public class ProductRead {
-    private Product product;
-    private Byte image;
+    private UUID pid;
+    private UUID author;
+    private String title;
+    private String image;
+    private Long price;
+    private String description;
+
 }

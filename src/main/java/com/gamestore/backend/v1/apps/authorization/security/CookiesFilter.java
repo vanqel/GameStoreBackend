@@ -1,8 +1,9 @@
-package com.gamestore.backend.v1.apps.authorization.config;
+package com.gamestore.backend.v1.apps.authorization.security;
 
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
@@ -17,7 +18,7 @@ import java.io.IOException;
 
 @Component
 @AllArgsConstructor
-public class TokenFilter extends OncePerRequestFilter {
+public class CookiesFilter extends OncePerRequestFilter {
 
     private JWTCore jwtCore;
     private UserDetailsService userDetailsSecurityService;
@@ -31,21 +32,27 @@ public class TokenFilter extends OncePerRequestFilter {
         UsernamePasswordAuthenticationToken auth = null;
 
         try {
-            String headerAuth = request.getHeader("Authorization");
-            if (headerAuth != null && headerAuth.startsWith("Bearer ")){
-                jwt = headerAuth.substring(7);
+            Cookie[] cookies = request.getCookies();
+            for (Cookie cookie : cookies){
+                if (cookie.getName().equals("jwt")){
+                    String jwt_cookie = cookie.getValue();
+                    if (jwt_cookie != null){
+                        jwt = jwt_cookie;
+                    }
+                }
+                if (cookie.getName().equals("jwt_refresh")){
+                    String jwt_cookie = cookie.getValue();
+                    if (jwt_cookie != null){
+                        jwt_refresh = jwt_cookie;
+                    }
+                }
             }
 
             if (jwt != null){
                 try {
-                    System.out.println("HEARED OK");
                     username = jwtCore.getNameFromJWT(jwt);
                 }catch (ExpiredJwtException ignored){
-                    System.out.println("ERROR GET NAME");
                 }
-            }
-            else {
-                System.out.println("Not headers");
             }
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null){
                 userDetails = userDetailsSecurityService.loadUserByUsername(username);
@@ -54,14 +61,12 @@ public class TokenFilter extends OncePerRequestFilter {
                         null
                 );
                 SecurityContextHolder.getContext().setAuthentication(auth);
-
             }
-
+        }
+        catch (Exception e){
+            //TODO
         }
 
-         catch ( Exception e){
-                 System.out.println("ERROR");
-             }
         filterChain.doFilter(request,response);
     }
 }

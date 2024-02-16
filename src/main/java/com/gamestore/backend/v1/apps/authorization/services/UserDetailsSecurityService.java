@@ -1,6 +1,6 @@
 package com.gamestore.backend.v1.apps.authorization.services;
 
-import com.gamestore.backend.v1.apps.authorization.config.JWTCore;
+import com.gamestore.backend.v1.apps.authorization.security.JWTCore;
 import com.gamestore.backend.v1.apps.authorization.model.Users;
 import com.gamestore.backend.v1.apps.authorization.repository.UserDetailsImpl;
 import com.gamestore.backend.v1.apps.authorization.repository.UserRepository;

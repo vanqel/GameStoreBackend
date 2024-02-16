@@ -1,4 +1,4 @@
-package com.gamestore.backend.v1.apps.authorization.config;
+package com.gamestore.backend.v1.apps.authorization.security;
 
 import com.gamestore.backend.v1.apps.authorization.repository.UserDetailsImpl;
 import io.jsonwebtoken.Jwts;

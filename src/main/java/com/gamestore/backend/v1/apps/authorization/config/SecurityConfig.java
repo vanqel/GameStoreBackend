@@ -1,5 +1,7 @@
 package com.gamestore.backend.v1.apps.authorization.config;
 
+import com.gamestore.backend.v1.apps.authorization.security.CookiesFilter;
+import com.gamestore.backend.v1.apps.authorization.security.TokenFilter;
 import com.gamestore.backend.v1.apps.authorization.services.UserDetailsSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -64,8 +66,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("api/v1/apps/**").fullyAuthenticated()
                         .anyRequest().permitAll())
-                .addFilterBefore(cookiesFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(tokenFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(cookiesFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 }
