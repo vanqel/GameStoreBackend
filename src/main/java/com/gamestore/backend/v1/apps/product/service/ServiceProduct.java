@@ -44,10 +44,12 @@ public class ServiceProduct {
         this.productRepository = productRepository;
     }
 
+    @Transactional
     public List<?> getAllProduct()  {
         return productRepository.getAllProduct();
     }
 
+    @Transactional
     public List<?> getAllProductByAuthor(UUID uid)  {
         return productRepository.getAllProductByAuthor(uid);
     }
@@ -125,6 +127,7 @@ public class ServiceProduct {
         }
     }
 
+    @Transactional
     public HttpStatus updateProductImage(ProductImage productImage){
         try {
             Optional<Product> product_curr = productRepository.findByPid(productImage.getPidProduct());
@@ -152,7 +155,7 @@ public class ServiceProduct {
                 return HttpStatus.NO_CONTENT;
             }
         }
-        catch (Exception exception){
+        catch (Exception exception) {
             return HttpStatus.UNAUTHORIZED;
         }
     }

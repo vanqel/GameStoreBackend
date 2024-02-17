@@ -8,10 +8,12 @@ import java.util.UUID;
 
 @Entity
 @Data
+
 public class ProductImage {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID iid;
     private UUID pidProduct;
-    private String image;
+    @Lob
+    private byte[] image;
 }
