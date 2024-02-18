@@ -7,6 +7,7 @@ import com.gamestore.backend.v1.apps.product.service.ServiceProduct;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -53,14 +54,21 @@ public class ProductController {
     @PutMapping("/image/{pid}")
     ResponseEntity<HttpStatus> updateProductImage(@RequestParam("img") MultipartFile img, @PathVariable UUID pid, HttpServletRequest request) {
         try {
-
-            byte[] imageData = img.getBytes();
-            ProductImage productImage = new ProductImage();
-            productImage.setImage(imageData);
-            productImage.setPidProduct(pid);
             serviceProduct.setupRequestParams(request);
-            return ResponseEntity.status(serviceProduct.updateProductImage(productImage)).build();
+            return ResponseEntity.status(serviceProduct.updateProductImage(img, pid)).build();
         } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+    }
+
+    @GetMapping("/image/{iid}")
+    ResponseEntity<byte[]> getImageByIid(@PathVariable UUID iid, HttpServletRequest request) {
+        try {
+            serviceProduct.setupRequestParams(request);
+            ProductImage productImage = serviceProduct.getImage(iid);
+            return ResponseEntity.ok().contentType(MediaType.valueOf(productImage.getType())).body(productImage.getImage());
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
 

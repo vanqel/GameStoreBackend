@@ -1,6 +1,6 @@
 package com.gamestore.backend.v1.apps.product.httpclient;
 
-import com.gamestore.backend.v1.apps.product.dto.User_dto;
+import com.gamestore.backend.v1.apps.product.dto.UserDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Arrays;
-import java.util.Optional;
 
 @Component
 public class UserClient {
@@ -29,16 +28,16 @@ public class UserClient {
     @Value("${gamestore.app.basedurl}")
     private String basedURL;
 
-    public User_dto getUser(){
+    public UserDTO getUser() {
         return restTemplate.build()
-                    .get()
-                    .uri(basedURL + "/me")
-                    .cookie(this.jwt_cookie.getName(), this.jwt_cookie.getValue())
-                    .header("Authorization", this.jwt_header)
-                    .retrieve()
-                    .bodyToFlux(User_dto.class)
-                    .collectList()
-                    .block().get(0);
+                .get()
+                .uri(basedURL + "/me")
+                .cookie(this.jwt_cookie.getName(), this.jwt_cookie.getValue())
+                .header("Authorization", this.jwt_header)
+                .retrieve()
+                .bodyToFlux(UserDTO.class)
+                .collectList()
+                .block().get(0);
     }
 
 }

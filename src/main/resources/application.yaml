@@ -13,6 +13,10 @@ spring:
       hibernate:
         format_sql: true
         show_sql: false
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
 gamestore:
       app:
         secret: fde09c8nh723dsaduoiasubpdiuvieeuiowu4eviouweoiuv5oipuweiovu5oipweu5oiv7eviopdrs7vo8

@@ -9,7 +9,7 @@ import java.util.UUID;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class User_dto {
+public class UserDTO {
     private UUID uuid;
     private String username;
     private String email;

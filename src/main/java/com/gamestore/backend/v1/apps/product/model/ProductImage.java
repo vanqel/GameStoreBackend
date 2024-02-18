@@ -1,7 +1,8 @@
 package com.gamestore.backend.v1.apps.product.model;
 
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.Data;
 
 import java.util.UUID;
@@ -11,9 +12,9 @@ import java.util.UUID;
 
 public class ProductImage {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID iid;
+    private UUID iid = UUID.randomUUID();
     private UUID pidProduct;
-    @Lob
     private byte[] image;
+    private String link;
+    private String type;
 }

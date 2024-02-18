@@ -1,7 +1,7 @@
 package com.gamestore.backend.v1.apps.product.service;
 
-import com.gamestore.backend.v1.apps.product.dto.ProductRead;
-import com.gamestore.backend.v1.apps.product.dto.User_dto;
+import com.gamestore.backend.v1.apps.product.dto.ProductDTO;
+import com.gamestore.backend.v1.apps.product.dto.UserDTO;
 import com.gamestore.backend.v1.apps.product.httpclient.UserClient;
 import com.gamestore.backend.v1.apps.product.model.Product;
 import com.gamestore.backend.v1.apps.product.model.ProductImage;
@@ -9,10 +9,14 @@ import com.gamestore.backend.v1.apps.product.repository.ProductImageRepository;
 import com.gamestore.backend.v1.apps.product.repository.ProductRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,18 +27,22 @@ public class ServiceProduct {
     private ProductRepository productRepository;
     private ProductImageRepository productImageRepository;
     private UserClient userClient;
+    @Value("${gamestore.app.basedurl}")
+    private String basedurl;
 
-    public void setupRequestParams(HttpServletRequest request){
+    public void setupRequestParams(HttpServletRequest request) {
         userClient.setJwt(request);
     }
-    public boolean verifyCreatorAdmin(User_dto user_dto){
-        return user_dto != null && (user_dto.getRoles().equals("creator") || user_dto.getRoles().equals("admin"));
+
+    public boolean verifyCreatorAdmin(UserDTO user_DTO) {
+        return user_DTO != null && (user_DTO.getRoles().equals("creator") || user_DTO.getRoles().equals("admin"));
     }
 
     @Autowired
     public void setUserClient(UserClient userClient) {
         this.userClient = userClient;
     }
+
     @Autowired
     public void setProductImageRepository(ProductImageRepository productImageRepository) {
         this.productImageRepository = productImageRepository;
@@ -54,15 +62,15 @@ public class ServiceProduct {
         return productRepository.getAllProductByAuthor(uid);
     }
 
-    public ProductRead getProductByPid(UUID pid){
+    public ProductDTO getProductByPid(UUID pid) {
         return productRepository.getProductByPid(pid);
     }
 
     public void addNewProduct(Product product){
         try {
-            User_dto user_dto = userClient.getUser();
-            if (user_dto != null && verifyCreatorAdmin(user_dto)){
-                product.setAuthor(user_dto.getUuid());
+            UserDTO user_DTO = userClient.getUser();
+            if (user_DTO != null && verifyCreatorAdmin(user_DTO)) {
+                product.setAuthor(user_DTO.getUuid());
                 productRepository.save(product);
             }
         }
@@ -71,12 +79,11 @@ public class ServiceProduct {
         }
     }
 
-    public void addNewProduct(Product product, User_dto user_dto){
+    public void addNewProduct(Product product, UserDTO user_DTO) {
         try {
-            product.setAuthor(user_dto.getUuid());
+            product.setAuthor(user_DTO.getUuid());
             productRepository.save(product);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             //TODO
         }
     }
@@ -84,7 +91,7 @@ public class ServiceProduct {
     public HttpStatus updateProduct(Product product){
         try {
             Optional<Product> product_curr = productRepository.findByPid(product.getPid());
-            User_dto user = userClient.getUser();
+            UserDTO user = userClient.getUser();
             if (product_curr.isPresent() && verifyCreatorAdmin(user) && product_curr.get().getAuthor() != null){
                 if( product.getAuthor().equals(user.getUuid())){
                     addNewProduct(product,user);
@@ -107,7 +114,7 @@ public class ServiceProduct {
     public HttpStatus deleteProduct(UUID pid){
         try {
             Optional<Product> product_curr = productRepository.findByPid(pid);
-            User_dto user = userClient.getUser();
+            UserDTO user = userClient.getUser();
             if (product_curr.isPresent() && verifyCreatorAdmin(user) && product_curr.get().getAuthor() != null){
                 Product product = product_curr.get();
                 if( product.getAuthor().equals(user.getUuid())){
@@ -128,23 +135,32 @@ public class ServiceProduct {
     }
 
     @Transactional
-    public HttpStatus updateProductImage(ProductImage productImage){
+    public HttpStatus updateProductImage(MultipartFile img, UUID pid) throws IOException {
+        MediaType mediaType = MediaType.valueOf(img.getContentType());
+        System.out.println(img.getSize());
+        if (!(mediaType.equals(MediaType.IMAGE_JPEG) || mediaType.equals(MediaType.IMAGE_PNG))) {
+            return HttpStatus.BAD_REQUEST;
+        }
+        byte[] imageData = img.getInputStream().readAllBytes();
+
         try {
-            Optional<Product> product_curr = productRepository.findByPid(productImage.getPidProduct());
-            Optional<ProductImage> productImageOptional = productImageRepository.findByPidProduct(productImage.getPidProduct());
-            User_dto user = userClient.getUser();
-            if (product_curr.isPresent() && verifyCreatorAdmin(user) && product_curr.get().getAuthor() != null){
+            Optional<Product> product_curr = productRepository.findByPid(pid);
+            Optional<ProductImage> productImageOptional = productImageRepository.findByPidProduct(pid);
+            UserDTO user = userClient.getUser();
+            if (product_curr.isPresent() && verifyCreatorAdmin(user) && product_curr.get().getAuthor() != null) {
                 Product product = product_curr.get();
-                if( product.getAuthor().equals(user.getUuid())){
-                    if (productImageOptional.isPresent()){
-                        productImageOptional.get().setImage(productImage.getImage());
-                        productImageRepository.save(productImageOptional.get());
-                        addNewProduct(product,user);
-                        return HttpStatus.ACCEPTED;
+                if (product.getAuthor().equals(user.getUuid())) {
+                    ProductImage image = new ProductImage();
+                    if (productImageOptional.isPresent()) {
+                        image = productImageOptional.get();
                     }
-                    productImageRepository.save(productImage);
-                    product.setLogotype(productImage.getIid());
-                    addNewProduct(product,user);
+                    image.setImage(imageData);
+                    image.setType(img.getContentType());
+                    image.setLink(basedurl + "/api/v1/apps/product/image/" + image.getIid());
+                    image.setPidProduct(pid);
+                    productImageRepository.save(image);
+                    product.setLogotype(image.getIid());
+                    addNewProduct(product, user);
                     return HttpStatus.ACCEPTED;
                 }
                 else {
@@ -160,34 +176,35 @@ public class ServiceProduct {
         }
     }
 
-
     @Transactional
     public HttpStatus deleteProductImage(UUID pid){
         try {
             Optional<Product> productOptional = productRepository.findByPid(pid);
-            User_dto user = userClient.getUser();
+            UserDTO user = userClient.getUser();
             if (productOptional.isPresent() &&
                     verifyCreatorAdmin(user) &&
                     productOptional.get().getAuthor() != null &&
                     productOptional.get().getLogotype() != null){
                 Product product = productOptional.get();
-                if( product.getAuthor().equals(user.getUuid())){
+                if (product.getAuthor().equals(user.getUuid())) {
                     productImageRepository.deleteByIid(product.getLogotype());
                     product.setLogotype(null);
                     addNewProduct(product);
                     return HttpStatus.OK;
-                }
-                else {
+                } else {
                     return HttpStatus.LOCKED;
                 }
-            }
-            else {
+            } else {
                 return HttpStatus.NO_CONTENT;
             }
-        }
-        catch (Exception exception){
+        } catch (Exception exception) {
             return HttpStatus.UNAUTHORIZED;
         }
     }
 
+    @Transactional
+    public ProductImage getImage(UUID iid) {
+        Optional<ProductImage> imageOptional = productImageRepository.findByIid(iid);
+        return imageOptional.orElse(null);
+    }
 }
